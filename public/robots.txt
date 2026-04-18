@@ -1,2 +1,2 @@
 User-Agent: *
-Disallow:
+Disallow: / # dont allow any crawling on the app

@@ -1,8 +1,8 @@
 Temporary wrap up list:
 
-1. `/onboarding` component that checks against the profile whether the user has been onboarded or not and based on that onboarded value `/verify` either routes to `/onboarding` or `/`
-   - One step should be implemented that captures the users name and surname
-   - When onboarding is completed the profile needs to be updated accordingly so the user doesnt get pushed to onboarding again
+1. `/onboarding` component that checks against the profile whether the user has been onboarded or not and based on that onboarded value `/verify` either routes to `/onboarding` or `/` ✅
+   - One step should be implemented that captures the users name and surname ✅
+   - When onboarding is completed the profile needs to be updated accordingly so the user doesnt get pushed to onboarding again ✅
 2. Responsive app layout so mobile/tablet (maybe touch to be even more specific) get a bottom navigation whilst desktop (maybe keyboard and mouse to be even more specific might be overboard) get a dashboard sidebar layout
    - Navigation needs to be kept down to a minimum with only Home and Settings being present as navigable routes (we also might need to think about how we want like the URLs and stuff to be set up)
 3. Settings page that allows for basic account management like updating name, surname, and email address.

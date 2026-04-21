@@ -46,6 +46,7 @@ import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
 const supabase = useSupabaseClient();
 const authError = ref<string | null>(null);
 const sessionExpired = ref(false);
+const { getUserProfile } = useUserProfile();
 
 const schema = z.object({
   otp: z
@@ -103,8 +104,21 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 
   pendingEmail.value = null; // verification successful so clear cookie
-  console.log("[auth] OTP verified. Navigating to /");
-  await navigateTo("/");
+  console.log("[auth] OTP verified. Fetching user profile.");
+  const userProfile = await getUserProfile({ force: true }); // forcing skips cache to ensure we get the latest data on each session initialization
+
+  if (!userProfile) {
+    console.error("[auth] Signed in in but failed to fetch user profile");
+    authError.value =
+      "Failed to fetch user profile after successful authentication. Please try again.";
+    return;
+  }
+
+  console.log(
+    "[auth] OTP verified. User onboarded status:",
+    userProfile.onboarded,
+  );
+  await navigateTo(userProfile.onboarded ? "/" : "/onboarding");
 }
 
 function handleMissingOrExpiredSession() {

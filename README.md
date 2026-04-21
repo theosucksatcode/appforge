@@ -37,3 +37,11 @@ pnpm preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+### Supabase Generate Types
+
+Whenever the DB schema changes run this command to have the Supabase CLI generate types for the codebase automatically:
+
+```bash
+pnpm sb-gen:types
+```

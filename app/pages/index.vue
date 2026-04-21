@@ -1,7 +1,7 @@
 <template>
-  <pre>{{ JSON.stringify(user, null, 2) }}</pre>
+  <pre>{{ JSON.stringify(profile, null, 2) }}</pre>
 </template>
 
 <script setup lang="ts">
-const user = useSupabaseUser();
+const { profile } = useUserProfile();
 </script>

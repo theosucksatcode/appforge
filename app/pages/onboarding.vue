@@ -5,6 +5,9 @@
     theyll see a loader and then very very briefly a blank page
     before being redirected back to the homepage instead of getting
     a flash of ui and then just being redirected
+
+    we have to do this because its the only way to reliably check if
+    the user has completed onboarding or not
   -->
 
   <NuxtLayout v-if="!checkingProfile" name="guest">

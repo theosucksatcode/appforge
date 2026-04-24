@@ -1,53 +1,14 @@
 <template>
-  <UDashboardGroup>
-    <UDashboardSidebar :toggle="false">
-      <template #header>
-        <img src="/appforge-icon.png" alt="AppForge icon" class="size-6" />
-        <span class="font-semibold">AppForge</span>
-      </template>
+  <div class="flex flex-col h-svh">
+    <MobileTopBar class="md:hidden" />
 
-      <UNavigationMenu
-        :items="navItems"
-        orientation="vertical"
-        color="primary"
-        highlight
-      />
-    </UDashboardSidebar>
-
-    <UDashboardPanel>
-      <template #body>
+    <div class="flex flex-1 min-h-0">
+      <AppSidebar />
+      <main class="flex-1 overflow-y-auto px-4 md:py-4">
         <slot />
-      </template>
-    </UDashboardPanel>
-  </UDashboardGroup>
+      </main>
+    </div>
 
-  <!-- mobile/tablet navigation -->
-  <UNavigationMenu
-    :items="navItems"
-    :ui="{
-      root: 'justify-around',
-      item: 'mx-4',
-      link: 'flex-col gap-1',
-      linkLabel: 'text-[10px]',
-    }"
-    class="fixed bottom-0 inset-x-0 z-50 lg:hidden border-t border-default"
-  />
+    <MobileBottomNav class="md:hidden" />
+  </div>
 </template>
-
-<script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
-
-const navItems: NavigationMenuItem[] = [
-  {
-    label: "Home",
-    icon: "i-lucide-house",
-    to: "/",
-    exact: true,
-  },
-  {
-    label: "Settings",
-    icon: "i-lucide-settings",
-    to: "/settings",
-  },
-];
-</script>

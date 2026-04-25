@@ -38,6 +38,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  layout: false,
+});
+
 import * as z from "zod";
 import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
 

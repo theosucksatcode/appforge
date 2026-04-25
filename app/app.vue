@@ -20,7 +20,10 @@ const resolving = ref(true);
 
 onMounted(async () => {
   if (user.value) {
-    await getUserProfile();
+    const userProfile = await getUserProfile();
+    if (userProfile && !userProfile.onboarded) {
+      await navigateTo("/onboarding");
+    }
   }
   resolving.value = false;
 });

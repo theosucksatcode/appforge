@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 mb-2 border-b border-default">
+  <div class="p-4 mb-4 border-b border-default">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <img src="/appforge-icon.png" alt="AppForge icon" class="size-6" />

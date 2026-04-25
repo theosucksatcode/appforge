@@ -15,19 +15,12 @@ export function useAppNavigation() {
 
   const menuItems = computed<DropdownMenuItem[][]>(() => [
     [
-      {
-        label: profile.value
-          ? `${profile.value.first_name} ${profile.value.last_name}`
-          : "Unknown",
-        disabled: true,
-      },
-    ],
-    [
       { label: "Settings", icon: "i-lucide-settings", to: "/settings" },
       {
         label: "Log out",
         icon: "i-lucide-log-out",
         color: "error" as const,
+        class: "hover:cursor-pointer",
         async onSelect() {
           await supabase.auth.signOut();
           await router.push("/authenticate");

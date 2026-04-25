@@ -6,6 +6,7 @@
       root: 'hidden md:block',
       container: 'md:flex',
     }"
+    variant="floating"
   >
     <template #header="{ state }">
       <div class="flex items-center gap-2">
@@ -34,6 +35,7 @@
         <UDropdownMenu
           :items="menuItems"
           :ui="{ content: 'w-33', label: 'truncate' }"
+          class="hover:cursor-pointer"
         >
           <UButton
             color="neutral"
@@ -58,7 +60,7 @@
         </UDropdownMenu>
 
         <UButton
-          class="hidden lg:flex"
+          class="hidden lg:flex hover:cursor-pointer"
           :icon="open ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left'"
           color="neutral"
           variant="ghost"

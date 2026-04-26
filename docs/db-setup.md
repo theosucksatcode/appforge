@@ -18,7 +18,9 @@ Setup above allows for OTP via emails as the primary authentication method.
 
 Update the SMTP template to match the current project.
 
-![](./assets/smtp.png)
+![](./assets/smtp-sign-in.png)
+
+![](./assets/smtp-email-change.png)
 
 ## Script Execution
 
@@ -104,6 +106,27 @@ create trigger update_profiles_updated_at
 before update on public.profiles
 for each row
 execute function public.update_updated_at();
+```
+
+## Sync Auth Email to Profile
+
+```sql
+-- auto updates profile email when auth email is changed
+create or replace function public.handle_user_email_updated()
+returns trigger as $$
+begin
+  if new.email is distinct from old.email then
+    update public.profiles set email = new.email where id = new.id;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+-- trigger
+create trigger on_auth_user_email_updated
+after update on auth.users
+for each row
+when (old.email is distinct from new.email)
+execute function public.handle_user_email_updated();
 ```
 
 ## Expected Flow

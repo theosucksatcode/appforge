@@ -1,6 +1,6 @@
 # AppForge Finalization Checklist
 
-## 1. Settings Experience
+## 1. Settings Experience ✅
 
 Stick with the dedicated `/settings` route.
 
@@ -10,16 +10,9 @@ Build it responsively so it feels native on mobile, tablet, and desktop, similar
   - updating name ✅
   - updating surname ✅
 - Second allow for:
-  - email update flow
+  - email update flow ✅
 
-This will likely require (need to research):
-
-- magic link flow
-- callback page
-- good success and error handling
-- somehow need to make sure latest profile data and Supabase auth data is in the system without having the user have to like log out and log back in but we will see they might have to do that but maybe not
-
-If the email update flow works nicely then I think Google OAuth in the template could be a stretch goal but this is another set up that needs to happen and things like that so think about it but might be worth it since I think most of my apps will use it anyways.
+_Was able to implement this using OTP flow that the template has been using for everything so the Google OAuth stretch is now even more of a stretch considering to get that in it will need its own whole operation and not just piggy back off of what I thought the settings flow would be._
 
 ## 2. Implement Toasts
 

@@ -109,7 +109,122 @@
               Manage your account and email settings.
             </p>
           </div>
-          <UBadge color="info" label="Coming soon" />
+
+          <!-- new email step -->
+          <template v-if="emailStep === 'idle'">
+            <div class="mb-4">
+              <p class="text-sm mb-1">Current email</p>
+              <UBadge color="neutral" variant="soft">{{
+                profile?.email
+              }}</UBadge>
+            </div>
+
+            <UForm
+              :schema="emailSchema"
+              :state="emailFormState"
+              class="space-y-4"
+              loading-auto
+              @submit="onEmailSubmit"
+            >
+              <UFormField label="New email" name="new_email">
+                <UInput
+                  v-model="emailFormState.new_email"
+                  type="email"
+                  placeholder="hello@appforge.com"
+                  class="w-full"
+                />
+              </UFormField>
+
+              <UAlert
+                v-if="emailError"
+                color="error"
+                icon="i-lucide-circle-x"
+                :title="emailError"
+                variant="soft"
+              />
+
+              <UAlert
+                v-if="emailSuccess"
+                color="success"
+                icon="i-lucide-circle-check"
+                title="Email updated successfully."
+                variant="soft"
+              />
+
+              <UButton
+                type="submit"
+                color="primary"
+                variant="subtle"
+                :disabled="!isEmailDirty"
+                class="hover:cursor-pointer"
+              >
+                Update email
+              </UButton>
+            </UForm>
+          </template>
+
+          <!-- verify new email step -->
+          <template v-else-if="emailStep === 'pending-otp'">
+            <p class="text-sm text-muted mb-6">
+              We sent a 6-digit code to
+              <span class="font-medium text-default">{{ pendingNewEmail }}</span
+              >. Enter it below to confirm your new email address.
+            </p>
+
+            <UForm
+              :schema="otpSchema"
+              :state="otpFormState"
+              class="space-y-4"
+              loading-auto
+              @submit="onOtpSubmit"
+            >
+              <UFormField label="Code" name="otp">
+                <UPinInput
+                  v-model="otpFormState.otp"
+                  :length="6"
+                  :otp="true"
+                  type="number"
+                />
+              </UFormField>
+
+              <UAlert
+                v-if="emailError"
+                color="error"
+                icon="i-lucide-circle-x"
+                :title="emailError"
+                variant="soft"
+              />
+
+              <div class="flex items-center gap-3">
+                <UButton
+                  type="submit"
+                  color="primary"
+                  variant="subtle"
+                  class="hover:cursor-pointer"
+                >
+                  Confirm
+                </UButton>
+                <UButton
+                  type="button"
+                  color="neutral"
+                  variant="ghost"
+                  class="hover:cursor-pointer"
+                  @click="cancelEmailChange"
+                >
+                  Cancel
+                </UButton>
+                <UButton
+                  type="button"
+                  color="neutral"
+                  variant="ghost"
+                  class="hover:cursor-pointer ml-auto"
+                  @click="resendEmailOtp"
+                >
+                  Resend code
+                </UButton>
+              </div>
+            </UForm>
+          </template>
         </template>
       </div>
     </div>
@@ -124,20 +239,25 @@ definePageMeta({
   title: "Settings",
 });
 
+// composables
 const supabase = useSupabaseClient();
 const { profile, getUserProfile, refreshUserProfile } = useUserProfile();
 
+// shared state
 const loadingProfile = ref(true);
-const submitError = ref<string | null>(null);
-const submitSuccess = ref(false);
 const activeSection = ref<"profile" | "account">("profile");
-
-let successTimer: ReturnType<typeof setTimeout> | null = null;
 
 const settingsNav = [
   { id: "profile" as const, label: "Profile", icon: "i-lucide-user" },
   { id: "account" as const, label: "Account", icon: "i-lucide-shield" },
 ];
+
+// profile section
+const formState = reactive({ first_name: "", last_name: "" });
+const originalValues = reactive({ first_name: "", last_name: "" });
+const submitError = ref<string | null>(null);
+const submitSuccess = ref(false);
+let successTimer: ReturnType<typeof setTimeout> | null = null;
 
 const schema = z.object({
   first_name: z
@@ -153,37 +273,15 @@ const schema = z.object({
 });
 type Schema = z.output<typeof schema>;
 
-const formState = reactive({
-  first_name: "",
-  last_name: "",
-});
-const originalValues = reactive({
-  first_name: "",
-  last_name: "",
-});
-const isDirty = computed(() => {
-  return (
+const isDirty = computed(
+  () =>
     formState.first_name !== originalValues.first_name ||
-    formState.last_name !== originalValues.last_name
-  );
-});
+    formState.last_name !== originalValues.last_name,
+);
 
 watch(formState, () => {
   if (submitSuccess.value) submitSuccess.value = false;
   if (submitError.value) submitError.value = null;
-});
-
-onMounted(async () => {
-  const currentProfile = await getUserProfile();
-  formState.first_name = currentProfile?.first_name ?? "";
-  formState.last_name = currentProfile?.last_name ?? "";
-  originalValues.first_name = currentProfile?.first_name ?? "";
-  originalValues.last_name = currentProfile?.last_name ?? "";
-  loadingProfile.value = false;
-});
-
-onBeforeUnmount(() => {
-  if (successTimer) clearTimeout(successTimer);
 });
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -215,4 +313,128 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     submitSuccess.value = false;
   }, 4000);
 }
+
+// account / email change section
+const emailStep = ref<"idle" | "pending-otp">("idle");
+const pendingNewEmail = ref("");
+const emailError = ref<string | null>(null);
+const emailSuccess = ref(false);
+let emailSuccessTimer: ReturnType<typeof setTimeout> | null = null;
+
+const emailFormState = reactive({ new_email: "" });
+const otpFormState = reactive<{ otp: number[] }>({ otp: [] });
+
+const isEmailDirty = computed(
+  () =>
+    emailFormState.new_email.trim() !== "" &&
+    emailFormState.new_email.trim() !== (profile.value?.email ?? ""),
+);
+
+const emailSchema = computed(() =>
+  z.object({
+    new_email: z
+      .string()
+      .trim()
+      .min(1, "Please enter your new email address")
+      .email("Please enter a valid email address")
+      .refine(
+        (val) => val !== (profile.value?.email ?? ""),
+        "New email must be different from your current email",
+      ),
+  }),
+);
+type EmailSchema = { new_email: string };
+
+const otpSchema = z.object({
+  otp: z
+    .union([z.array(z.number()), z.array(z.string())])
+    .transform((val) => val.join(""))
+    .pipe(z.string().regex(/^\d{6}$/, "Enter a valid 6-digit code")),
+});
+type OtpSchema = z.output<typeof otpSchema>;
+
+watch(emailFormState, () => {
+  if (emailError.value) emailError.value = null;
+  if (emailSuccess.value) emailSuccess.value = false;
+});
+
+watch(otpFormState, () => {
+  if (emailError.value) emailError.value = null;
+});
+
+async function onEmailSubmit(event: FormSubmitEvent<EmailSchema>) {
+  emailError.value = null;
+
+  const newEmail = event.data.new_email.trim().toLowerCase();
+  const { error } = await supabase.auth.updateUser({ email: newEmail });
+
+  if (error) {
+    emailError.value =
+      error.status === 422
+        ? "This email address is already in use."
+        : "We couldn't send the confirmation code. Please try again.";
+    return;
+  }
+
+  pendingNewEmail.value = newEmail;
+  emailStep.value = "pending-otp";
+}
+
+async function onOtpSubmit(event: FormSubmitEvent<OtpSchema>) {
+  emailError.value = null;
+
+  const { error } = await supabase.auth.verifyOtp({
+    email: pendingNewEmail.value,
+    token: event.data.otp,
+    type: "email_change",
+  });
+
+  if (error) {
+    emailError.value = "Invalid or expired code. Please try again.";
+    return;
+  }
+
+  await refreshUserProfile();
+  emailStep.value = "idle";
+  emailFormState.new_email = "";
+  otpFormState.otp = [];
+  pendingNewEmail.value = "";
+  emailSuccess.value = true;
+  emailSuccessTimer = setTimeout(() => {
+    emailSuccess.value = false;
+  }, 4000);
+}
+
+async function resendEmailOtp() {
+  emailError.value = null;
+  const { error } = await supabase.auth.resend({
+    type: "email_change",
+    email: pendingNewEmail.value,
+  });
+  if (error) {
+    emailError.value = "Couldn't resend the code. Please try again.";
+  }
+}
+
+function cancelEmailChange() {
+  emailStep.value = "idle";
+  pendingNewEmail.value = "";
+  otpFormState.otp = [];
+  emailError.value = null;
+}
+
+// lifecycle
+onMounted(async () => {
+  const currentProfile = await getUserProfile();
+  formState.first_name = currentProfile?.first_name ?? "";
+  formState.last_name = currentProfile?.last_name ?? "";
+  originalValues.first_name = currentProfile?.first_name ?? "";
+  originalValues.last_name = currentProfile?.last_name ?? "";
+  loadingProfile.value = false;
+});
+
+onBeforeUnmount(() => {
+  if (successTimer) clearTimeout(successTimer);
+  if (emailSuccessTimer) clearTimeout(emailSuccessTimer);
+});
 </script>
